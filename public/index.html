@@ -1,0 +1,159 @@
+<!doctype html>
+
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+
+  <title>Local Pickup</title>
+  <meta name="description" content="Local Pickup">
+  <meta name="author" content="SitePoint">
+
+  <link rel="stylesheet" href="styles.css?v=1.0">
+
+</head>
+
+<body>
+	<article>
+		<section>
+			<h1>Initial Page</h1>
+			<ul>
+				<li>selectTab1 <button data-name="selectTab1" data-url="/select.html">open select tab</button></li>
+				<li>selectTab2 <button data-name="selectTab2" data-url="/select.html">open select tab</button></li>
+				<li>selectTab3 <button data-name="selectTab3" data-url="/select.html">open select tab</button></li>
+				<li>selectTab4 <button data-name="selectTab4" data-url="/select.html">open select tab</button></li>
+				<li>selectTab5 <button data-name="selectTab5" data-url="/select.html">open select tab</button></li>
+			</ul>
+			<div>
+				<button id="action-button">send</button>
+				<input id="action-button-input" placeholder="Tab name to message" value="">
+			</div>
+			<div>
+				<button id="action-button-2">kill</button>
+				<input id="action-button-2-input" placeholder="Tab name to kill" value="">
+			</div>
+			<div>
+				<button id="action-button-3">kill all</button>
+			</div>
+		</section>
+	</article>
+
+  <script type="text/javascript">
+
+  	var tabArray = [];
+
+  	(function init(window, tabArray){
+
+  		/**
+  	 	 * Pollyfill to ensure Element.matches() works
+  	 	 **/
+	  	if (!Element.prototype.matches) {
+			  Element.prototype.matches = Element.prototype.msMatchesSelector || Element.prototype.webkitMatchesSelector;
+			}
+
+  		var tabButtons = document.querySelectorAll("li button");
+
+  		console.log("tabButtons", tabButtons);
+
+  		document.addEventListener('click', clickHandler, false);
+
+  		function clickHandler(event) {
+
+				if (event.target.matches('li button')) {
+
+					openTab(event);
+
+				} else if (event.target.matches('#action-button')) {
+
+					messageTab(event);
+
+				} else if(event.target.matches('#action-button-2')) {
+
+					killTab(event);
+
+				} else if (event.target.matches('#action-button-3')) {
+
+					tabArray = killAllTabs(tabArray);
+					location.reload();
+
+				}
+
+			}
+
+			function messageTab(event) {
+				var element = event.target;
+				var input = document.getElementById('action-button-input');
+				tabArray.filter(function(currentWindow, index, arr){
+					if(currentWindow.name === this.valueOf()){
+						sendMessage(tabArray[index], { data: "message from index to: " + currentWindow.name });
+					}
+				}, input.value);
+			}
+
+			function openTab(event) {
+				var element = event.target;
+				element.setAttribute("disabled", true);
+				tabArray.push(window.open(element.getAttribute('data-url'), element.getAttribute('data-name')));
+			}
+
+			function killTab(event) {
+				var element = event.target;
+				var input = document.getElementById('action-button-2-input');
+				console.log("input", input);
+				console.log("element", element);
+
+				var removeIndex;
+
+				tabArray.filter(function(currentWindow, index, arr){
+					if(currentWindow.name === this.valueOf()){
+						
+						currentWindow.close();
+						var selector = '*[data-name="' + this.valueOf() + '"]';
+						var button = document.querySelector(selector);
+						if(button) button.removeAttribute('disabled');
+						removeIndex = index;
+
+					}
+				}, input.value);
+
+				if(removeIndex != undefined){
+					tabArray.splice(removeIndex, 1);
+				}
+			}
+
+			function killAllTabs(tabs){
+				for(var i = 0; i < tabs.length; i++) {
+					tabs[i].close();
+				}
+				return [];
+			}
+
+			function receiveMessage(event){
+				console.log(event);
+			  if(event && event.data && event.data.data && event.data.data === 'KILLME') {
+			  	event.source.close();
+			  	killAllTabs(tabArray);
+					location.reload();
+			  }
+			}
+
+			function sendMessage(win, payload) {
+				win.postMessage(payload, "*");
+			}
+
+			function childTabAction(opener) {
+				console.log(opener.name + " is a child tab");
+				opener.focus();
+	    	sendMessage(opener, { data:"KILLME" });
+			}
+			
+			window.addEventListener("message", receiveMessage, false);
+
+			var opener = window.opener;
+
+			opener ? childTabAction(opener) : console.log("This page is the primary tab");
+
+  	})(window, tabArray);
+
+  </script>
+</body>
+</html>

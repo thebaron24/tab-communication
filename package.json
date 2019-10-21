@@ -1,0 +1,15 @@
+{
+  "name": "tab-communication",
+  "version": "1.0.0",
+  "description": "cross tab communication",
+  "main": "index.html",
+  "scripts": {
+  	"start" "http-server"
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "thebaron24",
+  "license": "MIT",
+  "devDependencies": {
+    "http-server": "^0.11.1"
+  }
+}

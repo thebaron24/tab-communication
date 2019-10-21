@@ -1,0 +1,98 @@
+<!doctype html>
+
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+
+  <title>Select</title>
+  <meta name="description" content="Local Pickup">
+  <meta name="author" content="SitePoint">
+
+  <link rel="stylesheet" href="styles.css?v=1.0">
+
+</head>
+
+<body>
+
+	<article>
+		<section>
+			<h1>Select Page</h1>
+			<div id="pickup-content">
+				<button id="button-select-pickup-location">Click here to select pickup location</button>
+				<button id="action-button">send message to opener</button>
+				<button id="action-button-2">Tell opening tab to kill this tab</button>
+				<div id="user-console-container">
+					<span id="user-console"></span>
+					<span id="user-console-num"></span>
+				</div>
+			</div>
+		</section>
+	</article>
+
+  <script type="text/javascript">
+
+  	(function init(window){
+
+  		/**
+  	 	 * Pollyfill to ensure Element.matches() works
+  	 	 **/
+	  	if (!Element.prototype.matches) {
+			  Element.prototype.matches = Element.prototype.msMatchesSelector || Element.prototype.webkitMatchesSelector;
+			}
+
+			window.document.addEventListener('click', clickHandler, false);
+
+			function clickHandler(event) {
+
+				if (event.target.matches('#action-button')) {
+
+					console.log(event);
+
+					window.opener.postMessage("message from select", "*");
+
+				} else if(event.target.matches('#action-button-2')) {
+
+					window.opener.postMessage({ data: "KILLME" }, "*");
+
+				} else if (event.target.matches('#button-select-pickup-location')) {
+
+					var userConsole = document.getElementById('user-console');
+					var userConsoleNum = document.getElementById('user-console-num');
+
+					userConsole.innerText = "pickup selected - redirecting to cart in";
+					userConsoleNum.innerText = "3";
+					var secondsToRedirect = 3;
+					var count = 1;
+					
+					var interval = setInterval(function(){
+						userConsoleNum.innerText = secondsToRedirect - count;
+						count++;
+						if(count >= 4) cancelInterval();
+					}, 1000);
+					
+					function cancelInterval(){
+						clearInterval(interval);
+						window.location = "/index.html";
+					}
+
+				}
+
+			}
+
+			function receiveMessage(event){
+			  console.log(window.name + ": message recieved: ", event);
+				
+			  if (event && event.data && event.data.data && window.opener) {
+			  	console.log("message recieved from index:", event.data.data);
+			  	event.source.postMessage("MESSAGE RECIEVED on select", "*");
+			  }
+				
+			}
+			
+			window.addEventListener("message", receiveMessage, false);
+
+  	})(window);
+
+  </script>
+</body>
+</html>
